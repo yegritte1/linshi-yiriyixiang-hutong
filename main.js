@@ -124,6 +124,7 @@ function drawStars(t) {
 }
 
 /* ---------------- 滚动 → 进度 ---------------- */
+let introAlive = true, introP = 0;
 let target = 0, prog = 0, overview = false, ovT = 0;
 let mouseX = 0, mouseY = 0, mx = 0, my = 0;
 const maxScroll = () => document.documentElement.scrollHeight - innerHeight;
@@ -162,7 +163,7 @@ function showChapter(i) {
 }
 
 /* ---------------- 主循环（3D 版） ---------------- */
-const haze = $('#haze'), moon = $('#moon');
+const haze = $('#haze'), moon = $('#moon'), veil = $('#veil');
 function frame(now) {
   prog += (target - prog) * .055;
   if (Math.abs(target - prog) < .002) prog = target;
@@ -172,9 +173,12 @@ function frame(now) {
   const ip = Math.min(N - 2, Math.floor(prog)), it = prog - ip;
   const h = lerp(STOPS[ip].h, STOPS[ip + 1].h, it);
 
-  const r = S3.update({ prog, h, ovT, mx, my, now });
+  const r = S3.update({ prog, h, ovT, mx, my, now, intro: introAlive ? 1 - introP : 0 });
 
   haze.style.opacity = h < 8 ? clamp((8 - h) / 3) * .55 : 0;
+  // 交叉溶解时加一层晨雾纸色，盖住 2D/3D 的细节差异
+  const fv = introAlive ? smooth(clamp((introP - .28) / .5)) : 1;
+  veil.style.opacity = (Math.sin(fv * Math.PI) * .5 + (1 - fv) * .15 + (introAlive ? 0 : 0)).toFixed(3);
   const so = clamp((h - 20) / 1.5);
   $('#stars').style.opacity = so;
   if (so > .01) drawStars(now);
@@ -190,7 +194,7 @@ function frame(now) {
   bar.style.width = (prog / (N - 1) * 100) + '%';
   const near = Math.round(prog);
   STOPS.forEach((s, k) => s.tl.classList.toggle('on', k === near));
-  const atStop = Math.abs(prog - near) < .14 && ovT < .3;
+  const atStop = Math.abs(prog - near) < .14 && ovT < .3 && !introAlive;
   showChapter(atStop ? near : -1);
 
   // 热点：3D 锚点投影到屏幕
@@ -198,7 +202,7 @@ function frame(now) {
     const a = S3.anchors[s.id];
     const on = (h >= s.from && h <= s.to) || ovT > .5;
     const p = S3.project(a);
-    const show = on && p.visible && p.depth < 260;
+    const show = on && p.visible && p.depth < 260 && !introAlive;
     s.el.classList.toggle('hidden', !show);
     s.el.style.left = p.x + 'px'; s.el.style.top = p.y + 'px';
     s.el.classList.toggle('near', show && atStop && p.depth < 60);
@@ -414,7 +418,7 @@ $('#menuClose').onclick = () => $('#menu').classList.remove('open');
 document.body.classList.add('locked');
 scrollTo(0, 0);
 const intro = $('#intro');
-let introP = 0, introTarget = 0, entering = false, imx = 0, imy = 0;
+let introTarget = 0, entering = false, imx = 0, imy = 0;
 intro.addEventListener('mousemove', e => { imx = e.clientX / innerWidth - .5; imy = e.clientY / innerHeight - .5; });
 function introLoop() {
   if (!intro.isConnected) return;
@@ -424,10 +428,15 @@ function introLoop() {
   cur.setProperty('--mx', (ox + (imx - ox) * .06).toFixed(4));
   cur.setProperty('--my', (oy + (imy - oy) * .06).toFixed(4));
   cur.setProperty('--p', introP.toFixed(4));
-  if (entering && introP > .82 && !intro.classList.contains('gone')) {
-    intro.classList.add('gone'); document.body.classList.remove('locked');
-    setTimeout(() => intro.remove(), 1300);
-  }
+  // 2D 胡同口与 3D 胡同同视角交叉溶解
+  const f = smooth(clamp((introP - .28) / .5));
+  cur.opacity = (1 - f).toFixed(3);
+  // 叠化最重时两边都轻微虚化，像眨眼、像走进雾里
+  const bl = Math.sin(f * Math.PI);
+  cur.filter = bl > .01 ? `blur(${(bl * 5).toFixed(2)}px)` : '';
+  $('#gl').style.filter = bl > .01 ? `blur(${(bl * 3).toFixed(2)}px)` : '';
+  if (entering && introP > .55 && document.body.classList.contains('locked')) document.body.classList.remove('locked');
+  if (entering && introP > .985) { introP = 1; introAlive = false; $('#gl').style.filter = ''; intro.remove(); return; }
   requestAnimationFrame(introLoop);
 }
 function enter() { if (entering) return; entering = true; introTarget = 1; }

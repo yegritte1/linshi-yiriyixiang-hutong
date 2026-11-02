@@ -17,7 +17,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:90;opa
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .48  0 0 0 0 .38  0 0 0 .22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");}
 
 /* ================= INTRO：胡同口 ================= */
-#intro{position:fixed;inset:0;z-index:60;overflow:hidden;background:#f3ecdc;cursor:pointer;
+#intro{position:fixed;inset:0;z-index:60;overflow:hidden;background:#f3ecdc;cursor:pointer;will-change:opacity;
   --mx:0;--my:0;--p:0}
 #intro.gone{opacity:0;pointer-events:none;transition:opacity 1.2s ease}
 .hl{position:absolute;inset:0;pointer-events:none;will-change:transform}
@@ -31,8 +31,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:90;opa
   animation:mist 9s ease-in-out infinite alternate;opacity:calc(1 - var(--p)*.6)}
 @keyframes mist{from{transform:translateX(-2%)}to{transform:translateX(2%)}}
 .near-l img,.near-r img{bottom:-4%;height:108%;mix-blend-mode:multiply}
-.near-l img{left:-6%;transform:translate(calc(var(--mx)*-42px - var(--p)*60vw),calc(var(--my)*-16px)) scale(calc(1 + var(--p)*.8));transform-origin:0 100%}
-.near-r img{right:-6%;transform:translate(calc(var(--mx)*-42px + var(--p)*60vw),calc(var(--my)*-16px)) scale(calc(1 + var(--p)*.8));transform-origin:100% 100%}
+.near-l img{left:-6%;transform:translate(calc(var(--mx)*-42px - var(--p)*55vw),calc(var(--my)*-16px)) scale(calc(1 + var(--p)*.8));transform-origin:0 100%}
+.near-r img{right:-6%;transform:translate(calc(var(--mx)*-42px + var(--p)*55vw),calc(var(--my)*-16px)) scale(calc(1 + var(--p)*.8));transform-origin:100% 100%}
 
 .sign-wrap{position:absolute;left:50%;top:0;transform:translate(-50%,0) translate(calc(var(--mx)*-24px),calc(var(--my)*-10px - var(--p)*40vh));
   display:flex;flex-direction:column;align-items:center;z-index:3;opacity:calc(1 - var(--p)*2)}
@@ -258,3 +258,5 @@ body.night #chapter{text-shadow:0 0 18px rgba(15,20,35,.9)}
 #loading i{width:120px;height:1px;background:var(--red);animation:load 1.4s infinite}
 @keyframes load{0%{transform:scaleX(0)}50%{transform:scaleX(1)}100%{transform:scaleX(0);transform-origin:right}}
 #loading.done{opacity:0;pointer-events:none}
+
+#veil{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse 70% 60% at 50% 62%,#fbf6ea 0%,rgba(246,238,219,.7) 100%);opacity:0}

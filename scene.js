@@ -23,7 +23,7 @@ export const MODEL_SLOTS = {
 
 /* ---------- 镜头节点（与 main.js 的 STOPS 一一对应） ---------- */
 const CAMS = [
-  { p: [175, 78, 95],  t: [70, 0, -5] },     // 拂晓 · 东头航拍
+  { p: [128, 2.6, 0],  t: [40, 15, 0] },      // 拂晓 · 站在胡同口（与首页同视角）
   { p: [104, 7.5, 21], t: [95, 2.2, 6] },    // 早点摊
   { p: [88.5, 4.6, -10.5], t: [84, 1.1, -15] }, // 毛猴（东侧院工作台）
   { p: [14, 34, 14],   t: [0, 0, -17] },     // 四合院（俯看院心）
@@ -510,7 +510,7 @@ export function initScene(canvas) {
   /* ---------- 更新 ---------- */
   const tmpP = new THREE.Vector3(), tmpT = new THREE.Vector3(), skyEl = document.getElementById('sky');
   let lastNight = -1;
-  function update({ prog, h, ovT, mx, my, now }) {
+  function update({ prog, h, ovT, mx, my, now, intro = 0 }) {
     const n = CAMS.length;
     const i = Math.min(n - 2, Math.floor(prog)), raw = prog - i;
     const e = smooth(clamp((raw - .18) / .64));
@@ -524,6 +524,8 @@ export function initScene(canvas) {
     if (ovT > .001) {
       tmpP.lerp(V(40, 150, 170), ovT); tmpT.lerp(V(0, 0, -5), ovT);
     }
+    // 首页推进：镜头从胡同口外往里走，落点正好是第一个镜头
+    if (intro > 0) { const k = intro * intro * 22; tmpP.x += k; tmpT.x += k; tmpP.y += intro * .4; }
     tmpP.x += mx * 3; tmpP.y -= my * 2;
     camera.position.copy(tmpP); camera.lookAt(tmpT);
 
