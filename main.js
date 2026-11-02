@@ -410,15 +410,49 @@ $('#mapBtn').onclick = () => { overview = !overview; $('#mapBtn').firstChild.tex
 $('#menuBtn').onclick = () => $('#menu').classList.add('open');
 $('#menuClose').onclick = () => $('#menu').classList.remove('open');
 
-/* ---------------- 开场 ---------------- */
+/* ---------------- 首页：胡同口 ---------------- */
 document.body.classList.add('locked');
 scrollTo(0, 0);
-$('#knocker').addEventListener('click', () => {
-  const intro = $('#intro');
-  intro.classList.add('opening');
-  setTimeout(() => { intro.classList.add('gone'); document.body.classList.remove('locked'); }, 1600);
-  setTimeout(() => intro.remove(), 3200);
-});
+const intro = $('#intro');
+let introP = 0, introTarget = 0, entering = false, imx = 0, imy = 0;
+intro.addEventListener('mousemove', e => { imx = e.clientX / innerWidth - .5; imy = e.clientY / innerHeight - .5; });
+function introLoop() {
+  if (!intro.isConnected) return;
+  introP += (introTarget - introP) * (entering ? .045 : .12);
+  const cur = intro.style;
+  const ox = parseFloat(cur.getPropertyValue('--mx')) || 0, oy = parseFloat(cur.getPropertyValue('--my')) || 0;
+  cur.setProperty('--mx', (ox + (imx - ox) * .06).toFixed(4));
+  cur.setProperty('--my', (oy + (imy - oy) * .06).toFixed(4));
+  cur.setProperty('--p', introP.toFixed(4));
+  if (entering && introP > .82 && !intro.classList.contains('gone')) {
+    intro.classList.add('gone'); document.body.classList.remove('locked');
+    setTimeout(() => intro.remove(), 1300);
+  }
+  requestAnimationFrame(introLoop);
+}
+function enter() { if (entering) return; entering = true; introTarget = 1; }
+// 轻滚先“探头”，继续滚就进入
+let peek = 0;
+intro.addEventListener('wheel', e => { e.preventDefault(); peek = clamp(peek + e.deltaY / 900, 0, .3); introTarget = peek; if (peek >= .3) enter(); }, { passive: false });
+let ty0 = null;
+intro.addEventListener('touchstart', e => { ty0 = e.touches[0].clientY; }, { passive: true });
+intro.addEventListener('touchmove', e => { if (ty0 !== null && ty0 - e.touches[0].clientY > 40) enter(); }, { passive: true });
+intro.addEventListener('click', enter);
+addEventListener('keydown', e => { if (intro.isConnected && !entering && [' ', 'Enter', 'ArrowDown'].includes(e.key)) enter(); });
+// 首页鸽群
+(function introBirds() {
+  if (!intro.isConnected) return;
+  const box = $('#introBirds'), n = 5 + (Math.random() * 5 | 0), top = 18 + Math.random() * 16, dur = 16 + Math.random() * 6;
+  for (let k = 0; k < n; k++) {
+    const b = document.createElement('div'); b.className = 'bird';
+    b.style.left = (100 + k * 2.2 + Math.random() * 3) + 'vw'; b.style.top = (top + Math.random() * 5) + 'vh';
+    b.style.animationDuration = dur + 's';
+    b.innerHTML = '<svg viewBox="0 0 22 10"><path d="M1 6 Q6 0 11 6 Q16 0 21 6" fill="none" stroke="#3a342c" stroke-width="1.6"/></svg>';
+    box.appendChild(b); setTimeout(() => b.remove(), dur * 1000);
+  }
+  setTimeout(introBirds, 7000 + Math.random() * 5000);
+})();
+requestAnimationFrame(introLoop);
 
 addEventListener('resize', buildStars);
 buildStars();

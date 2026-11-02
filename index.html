@@ -10,25 +10,36 @@
 </head>
 <body>
 
-<!-- ============ 开场：木门 ============ -->
+<!-- ============ 首页：胡同口 ============ -->
 <section id="intro">
-  <div class="intro-paper"></div>
-  <div class="intro-title">
-    <p class="intro-kicker">北 京 · 胡 同 · 非 遗</p>
-    <h1>一&nbsp;日&nbsp;一&nbsp;巷</h1>
-    <p class="intro-sub">胡同里的时间遗产</p>
+  <div class="hl sky"></div>
+  <div class="hl far"><img src="./img/home_far.webp" alt="胡同口" draggable="false" /></div>
+  <div class="hl mist"></div>
+  <div class="hl birds" id="introBirds"></div>
+  <div class="hl near-l"><img src="./img/home_left.webp" alt="" draggable="false" /></div>
+  <div class="hl near-r"><img src="./img/home_right.webp" alt="" draggable="false" /></div>
+
+  <div class="sign-wrap">
+    <div class="sign-wire"></div>
+    <div class="street-sign">
+      <div class="sign-cn">一日一巷</div>
+      <div class="sign-py">YI RI YI XIANG</div>
+      <span class="sign-arrow">胡同里的时间遗产</span>
+    </div>
   </div>
-  <div class="door-wrap">
-    <img class="door-img" src="./img/door.webp" alt="胡同木门" draggable="false" />
-    <button class="knocker" id="knocker" aria-label="叩门">
-      <span class="ring"></span>
-    </button>
-    <div class="door-light"></div>
+
+  <p class="intro-kicker">北京 · 胡同 · 非遗</p>
+
+  <div class="intro-meta">
+    <span>05:30</span><i></i><span>拂晓 · 东城某胡同</span>
   </div>
-  <div class="intro-hint">
-    <span>叩 门 而 入</span>
-    <i class="hint-line"></i>
-  </div>
+
+  <button class="intro-enter" id="enterBtn">
+    <span class="enter-txt">天快亮了 · 往里走</span>
+    <span class="enter-line"></span>
+    <small>滚动 / 点击</small>
+  </button>
+
 </section>
 
 <!-- ============ 主舞台：一张胡同图 ============ -->
