@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>一日一巷 · 胡同里的时间遗产</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+<!-- ============ 开场：木门 ============ -->
+<section id="intro">
+  <div class="intro-paper"></div>
+  <div class="intro-title">
+    <p class="intro-kicker">北 京 · 胡 同 · 非 遗</p>
+    <h1>一&nbsp;日&nbsp;一&nbsp;巷</h1>
+    <p class="intro-sub">胡同里的时间遗产</p>
+  </div>
+  <div class="door-wrap">
+    <img class="door-img" src="./img/door.webp" alt="胡同木门" draggable="false" />
+    <button class="knocker" id="knocker" aria-label="叩门">
+      <span class="ring"></span>
+    </button>
+    <div class="door-light"></div>
+  </div>
+  <div class="intro-hint">
+    <span>叩 门 而 入</span>
+    <i class="hint-line"></i>
+  </div>
+</section>
+
+<!-- ============ 主舞台：一张胡同图 ============ -->
+<div id="scroll-space"></div>
+
+<main id="stage">
+  <div id="sky"></div>
+  <div id="moon"></div>
+  <canvas id="stars"></canvas>
+
+  <canvas id="gl"></canvas>
+  <div id="hotspots"></div>
+  <div id="haze"></div>
+  <div id="birds"></div>
+  <div id="vignette"></div>
+  <div id="loading"><span>胡 同 搭 建 中</span><i></i></div>
+
+  <!-- 章节大字 -->
+  <div id="chapter">
+    <p class="ch-time"></p>
+    <h2 class="ch-title"></h2>
+    <p class="ch-sub"></p>
+  </div>
+
+  <!-- HUD -->
+  <header id="hud">
+    <button id="menuBtn" class="menu"><span>目</span><span>录</span></button>
+    <div class="hud-right">
+      <div id="seals" title="已收集的非遗印记">
+        <span class="seal-slot" data-k="maohou">猴</span>
+        <span class="seal-slot" data-k="kite">鸢</span>
+        <span class="seal-slot" data-k="mask">谱</span>
+      </div>
+      <button id="mapBtn" class="map-btn">全&nbsp;图<i></i></button>
+    </div>
+  </header>
+
+  <div id="clock"><span id="clockTime">05:30</span><small id="clockLabel">拂晓</small></div>
+
+  <nav id="timeline"></nav>
+
+  <p id="scrollHint">向下滚动 · 让时间流动</p>
+</main>
+
+<!-- 地点卡片 -->
+<aside id="panel">
+  <button class="panel-close" id="panelClose">×</button>
+  <div class="panel-img"><img id="panelImg" alt="" /></div>
+  <div class="panel-body">
+    <p class="panel-kicker" id="panelKicker"></p>
+    <h3 id="panelTitle"></h3>
+    <div id="panelText"></div>
+    <div class="panel-actions" id="panelActions"></div>
+  </div>
+</aside>
+
+<!-- 互动弹层 -->
+<section id="game">
+  <div class="game-head">
+    <p class="game-kicker" id="gameKicker"></p>
+    <h3 id="gameTitle"></h3>
+    <p class="game-tip" id="gameTip"></p>
+  </div>
+  <div class="game-body" id="gameBody"></div>
+  <div class="game-foot">
+    <div id="palette"></div>
+    <button class="btn ghost" id="gameReset">重来</button>
+    <button class="btn" id="gameDone">完成 · 盖印</button>
+    <button class="btn ghost" id="gameClose">离开</button>
+  </div>
+</section>
+
+<!-- 目录 -->
+<section id="menu">
+  <button class="panel-close" id="menuClose">×</button>
+  <h3>一日一巷 · 目录</h3>
+  <ol id="menuList"></ol>
+  <p class="menu-note">一条胡同 · 一天时间 · 三项非遗 · 一块门牌</p>
+</section>
+
+<!-- 结尾：门牌 -->
+<section id="finale">
+  <div class="finale-bg"></div>
+  <div class="finale-card">
+    <p class="finale-kicker">夜 深 了</p>
+    <h2>你在这条胡同里，过完了一天</h2>
+    <div class="plate">
+      <div class="plate-inner">
+        <small>一日一巷</small>
+        <strong id="plateNo">壹号</strong>
+        <em id="plateDate"></em>
+      </div>
+      <div class="plate-seals" id="plateSeals"></div>
+    </div>
+    <p class="finale-text" id="finaleText"></p>
+    <div class="finale-actions">
+      <button class="btn" id="againBtn">从清晨再走一遍</button>
+      <button class="btn ghost" id="finaleClose">留在夜里</button>
+    </div>
+  </div>
+</section>
+
+<div id="toast"></div>
+
+<script type="importmap">{"imports":{"three":"./lib/three.module.min.js"}}</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
