@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { initScene } from './scene.js';
+import { initMaohou, initKite, initMask } from './games.js';
 /* 一日一巷 · 胡同里的时间遗产
  * 一张胡同图，滚动 = 时间流逝；镜头沿胡同由东（晨）向西（夜）飞行，换光不换图。
  */
@@ -241,7 +242,7 @@ function openSpot(s) {
   const act = $('#panelActions'); act.innerHTML = '';
   if (s.game) {
     const g = document.createElement('button'); g.className = 'btn';
-    g.textContent = { maohou: '动手拼一只毛猴', kite: '给沙燕上色', mask: '为脸谱补色' }[s.game];
+    g.textContent = { maohou: '捏一只立体毛猴', kite: '绘一只沙燕 · 放上天', mask: '对镜勾脸谱（可用摄像头）' }[s.game];
     if (collected.has(s.game)) g.textContent += ' · 已盖印';
     g.onclick = () => { closePanel(); openGame(s.game); };
     act.appendChild(g);
@@ -254,7 +255,7 @@ function closePanel() { $('#panel').classList.remove('open'); }
 $('#panelClose').onclick = closePanel;
 $('#gl').addEventListener('click', closePanel);
 
-function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2200); }
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 3600); }
 
 /* ---------------- 互动：通用 ---------------- */
 let curGame = null, gameState = {};
@@ -263,133 +264,41 @@ const PAL = [
   ['#2b2724', '墨'], ['#f4ece0', '粉白'], ['#9b5a33', '赭石'], ['#c9a227', '泥金']
 ];
 function openGame(kind) {
+  if (gameState.dispose) gameState.dispose();
   curGame = kind;
   document.body.classList.add('locked');
   const meta = {
-    maohou: ['非遗 · 北京毛猴', '拼 一 只 毛 猴', '把散落的蝉蜕和辛夷拖到对应的位置，靠近会自动吸附'],
-    kite: ['非遗 · 沙燕风筝', '给 沙 燕 上 色', '选一种颜色，点击风筝上的区块填色；传统沙燕讲究左右对称'],
-    mask: ['非遗 · 京剧脸谱', '为 脸 谱 补 色', '红忠勇 · 黑刚直 · 白奸诈 · 黄骁勇 · 蓝桀骜，选一种性格画给它']
+    maohou: ['非遗 · 北京毛猴', '捏 一 只 毛 猴', '蝉蜕做头和四肢，辛夷做身子——把零件拖到淡红色的位置'],
+    kite: ['非遗 · 沙燕风筝', '绘 燕 · 放 飞', '扎、糊、绘、放：选燕型、贴纹样，再迎着风把它放上天'],
+    mask: ['非遗 · 京剧脸谱', '对 镜 勾 脸', '红忠勇 · 黑刚直 · 白奸诈 · 蓝桀骜——听戏文，认角色']
   }[kind];
   $('#gameKicker').textContent = meta[0]; $('#gameTitle').textContent = meta[1]; $('#gameTip').textContent = meta[2];
   $('#gameBody').innerHTML = ''; $('#palette').innerHTML = '';
-  $('#game').classList.add('open');
-  if (kind === 'maohou') initMaohou(); else initColoring(kind);
+  $('#game').className = 'open g-' + kind;
+  const ui = { tip: t => { const e = $('#gameTip'); e.textContent = t; e.classList.remove('flash'); void e.offsetWidth; e.classList.add('flash'); } };
+  gameState = ({ maohou: initMaohou, kite: initKite, mask: initMask })[kind]($('#gameBody'), ui);
 }
-function closeGame() { $('#game').classList.remove('open'); document.body.classList.remove('locked'); curGame = null; }
+function closeGame() {
+  $('#game').className = ''; document.body.classList.remove('locked'); curGame = null;
+  if (gameState.dispose) gameState.dispose(); gameState = {};
+}
+window.__openGame = openGame; window.__goTo = goTo; window.__done = () => $('#gameDone').click();
 $('#gameClose').onclick = closeGame;
 $('#gameReset').onclick = () => openGame(curGame);
 $('#gameDone').onclick = () => {
-  if (!gameState.ok()) { toast(curGame === 'maohou' ? '还有零件没拼上' : '再多涂几块颜色吧'); return; }
-  collected.add(curGame);
-  document.querySelector(`.seal-slot[data-k="${curGame}"]`).classList.add('on');
-  SPOTS.find(s => s.game === curGame).el.classList.add('done');
-  toast({ maohou: '获得印记 · 猴', kite: '获得印记 · 鸢', mask: '获得印记 · 谱' }[curGame]);
+  if (!gameState.ok || !gameState.ok()) { toast(gameState.need ? gameState.need() : '还没完成哦'); return; }
+  const k = curGame;
+  try {
+    if (k === 'maohou') S3.addMaohou(gameState.result());
+    if (k === 'kite') S3.setKiteTexture(gameState.result());
+  } catch (e) { console.warn(e); }
+  const cap = gameState.caption ? gameState.caption() : '';
+  collected.add(k);
+  document.querySelector(`.seal-slot[data-k="${k}"]`).classList.add('on');
+  SPOTS.find(s => s.game === k).el.classList.add('done');
   closeGame();
+  toast(cap || { maohou: '获得印记 · 猴', kite: '获得印记 · 鸢', mask: '获得印记 · 谱' }[k]);
 };
-
-/* ---------------- 互动：毛猴拼装 ---------------- */
-// 零件在原始白坯图中的相对位置（已缩放 1/2），作为“正确拼装位置”
-const MH = [
-  ['mh_head', 248, 247], ['mh_body', 275, 764], ['mh_armL', 136, 683],
-  ['mh_armR', 578, 683], ['mh_legL', 117, 1007], ['mh_legR', 595, 1007]
-];
-function initMaohou() {
-  const stage = document.createElement('div'); stage.className = 'mh-stage';
-  $('#gameBody').appendChild(stage);
-  const W = stage.clientWidth, H = stage.clientHeight;
-  const s = Math.min(H / 560, W / 760);
-  const ox = W * .62 - 330 / 2 * s, oy = (H - 530 * s) / 2;
-  const tgt = n => { const p = MH.find(m => m[0] === n); return [ox + (p[1] - 117) / 2 * s, oy + (p[2] - 247) / 2 * s]; };
-  const pieces = [];
-  MH.forEach(([n], k) => {
-    const g = new Image(); g.src = `./img/${n}.png`; g.className = 'mh-ghost';
-    const [x, y] = tgt(n);
-    g.onload = () => { g.style.width = g.naturalWidth * s + 'px'; };
-    Object.assign(g.style, { left: x + 'px', top: y + 'px' });
-    stage.appendChild(g);
-    const p = new Image(); p.src = `./img/${n}.png`; p.className = 'mh-piece'; p.draggable = false;
-    p.onload = () => { p.style.width = p.naturalWidth * s + 'px'; };
-    const sx = W * .04 + (k % 2) * W * .17 + Math.random() * 20, sy = H * .06 + Math.floor(k / 2) * H * .3 + Math.random() * 20;
-    Object.assign(p.style, { left: sx + 'px', top: sy + 'px', transform: `rotate(${(Math.random() * 40 - 20) | 0}deg)` });
-    p.dataset.n = n; stage.appendChild(p); pieces.push(p);
-    let dx = 0, dy = 0, drag = false;
-    p.addEventListener('pointerdown', e => {
-      if (p.classList.contains('snapped')) return;
-      drag = true; p.setPointerCapture(e.pointerId);
-      dx = e.clientX - p.offsetLeft; dy = e.clientY - p.offsetTop;
-      p.style.zIndex = 10; p.style.transform = 'rotate(0deg) scale(1.06)';
-    });
-    p.addEventListener('pointermove', e => { if (!drag) return; p.style.left = e.clientX - dx + 'px'; p.style.top = e.clientY - dy + 'px'; });
-    p.addEventListener('pointerup', () => {
-      if (!drag) return; drag = false; p.style.zIndex = '';
-      const [x, y] = tgt(n);
-      if (Math.hypot(p.offsetLeft - x, p.offsetTop - y) < 50 * s + 20) {
-        p.style.transition = 'left .35s, top .35s, transform .35s';
-        p.style.left = x + 'px'; p.style.top = y + 'px'; p.style.transform = 'none';
-        p.classList.add('snapped');
-        if (pieces.every(q => q.classList.contains('snapped'))) toast('毛猴拼好啦，点“完成 · 盖印”');
-      } else p.style.transform = 'rotate(0deg)';
-    });
-  });
-  gameState.ok = () => pieces.every(q => q.classList.contains('snapped'));
-}
-
-/* ---------------- 互动：填色（风筝 / 脸谱） ---------------- */
-function initColoring(kind) {
-  let color = PAL[kind === 'mask' ? 0 : 0][0], fills = 0;
-  PAL.forEach(([c, name], k) => {
-    const b = document.createElement('button'); b.className = 'sw' + (k === 0 ? ' on' : '');
-    b.style.background = c; b.innerHTML = `<span>${name}</span>`;
-    if (c === '#f4ece0') b.style.boxShadow = 'inset 0 0 0 1px rgba(0,0,0,.2)';
-    b.onclick = () => { color = c; document.querySelectorAll('.sw').forEach(x => x.classList.remove('on')); b.classList.add('on'); };
-    $('#palette').appendChild(b);
-  });
-  const cv = document.createElement('canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
-  $('#gameBody').appendChild(cv);
-  const img = new Image();
-  img.src = `./img/${kind === 'kite' ? 'kite_line' : 'mask_line'}.png`;
-  let orig, cur, lum;
-  img.onload = () => {
-    cv.width = img.naturalWidth; cv.height = img.naturalHeight;
-    ctx.drawImage(img, 0, 0);
-    try {
-      orig = ctx.getImageData(0, 0, cv.width, cv.height);
-      cur = ctx.getImageData(0, 0, cv.width, cv.height);
-    } catch (e) { toast('本地预览无法填色，请用部署链接打开'); return; }
-    lum = new Uint8Array(cv.width * cv.height);
-    for (let i = 0; i < lum.length; i++) lum[i] = (orig.data[i * 4] + orig.data[i * 4 + 1] + orig.data[i * 4 + 2]) / 3;
-  };
-  cv.addEventListener('click', e => {
-    if (!lum) return;
-    const r = cv.getBoundingClientRect();
-    const x = Math.floor((e.clientX - r.left) / r.width * cv.width), y = Math.floor((e.clientY - r.top) / r.height * cv.height);
-    if (flood(x, y, color)) { fills++; ctx.putImageData(cur, 0, 0); }
-  });
-  function flood(x0, y0, hex) {
-    const W = cv.width, H = cv.height, T = 150;
-    if (lum[y0 * W + x0] < T) return false;
-    const cr = parseInt(hex.slice(1, 3), 16), cg = parseInt(hex.slice(3, 5), 16), cb = parseInt(hex.slice(5, 7), 16);
-    const seen = new Uint8Array(W * H), stack = [y0 * W + x0];
-    let count = 0;
-    while (stack.length) {
-      const p = stack.pop();
-      if (seen[p]) continue;
-      seen[p] = 1;
-      if (lum[p] < T) continue;
-      // 乘上原纸纹亮度，保留手绘质感
-      const k = lum[p] / 255, i = p * 4;
-      cur.data[i] = cr * k; cur.data[i + 1] = cg * k; cur.data[i + 2] = cb * k;
-      count++;
-      const x = p % W;
-      if (x > 0) stack.push(p - 1);
-      if (x < W - 1) stack.push(p + 1);
-      if (p >= W) stack.push(p - W);
-      if (p < W * (H - 1)) stack.push(p + W);
-    }
-    return count > 0;
-  }
-  gameState.ok = () => fills >= 4;
-}
 
 /* ---------------- 结尾：门牌 ---------------- */
 function openFinale() {

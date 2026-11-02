@@ -579,5 +579,25 @@ export function initScene(canvas) {
 
   addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
 
-  return { update, project, projectDir, anchors };
+  /* ---------- 互动结果回写到 3D 世界 ---------- */
+  let myMonkey = null;
+  function addMaohou(obj) {
+    if (myMonkey) bench.remove(myMonkey);
+    const bb = new THREE.Box3().setFromObject(obj), sz = bb.getSize(new THREE.Vector3());
+    obj.scale.multiplyScalar(.62 / sz.y);
+    obj.position.set(-.1, 1.0, .35); obj.rotation.y = .75;
+    obj.traverse(o => { if (o.isMesh) { o.castShadow = true; } });
+    bench.add(obj); myMonkey = obj;
+  }
+  let myKite = null;
+  function setKiteTexture(cv) {
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+    kiteG.children.forEach(c => c.visible = false);
+    if (myKite) kiteG.remove(myKite);
+    const w = 5.8, h = w * cv.height / cv.width;
+    myKite = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: .05, side: THREE.DoubleSide }));
+    myKite.rotation.y = Math.PI; kiteG.add(myKite);
+  }
+
+  return { update, project, projectDir, anchors, addMaohou, setKiteTexture };
 }

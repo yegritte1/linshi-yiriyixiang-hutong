@@ -260,3 +260,101 @@ body.night #chapter{text-shadow:0 0 18px rgba(15,20,35,.9)}
 #loading.done{opacity:0;pointer-events:none}
 
 #veil{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse 70% 60% at 50% 62%,#fbf6ea 0%,rgba(246,238,219,.7) 100%);opacity:0}
+
+/* ===== 非遗深交互 v2 ===== */
+#game .game-tip{max-width:min(860px,90vw);margin:0 auto;line-height:1.7;min-height:1.7em}
+#game .game-tip.flash{animation:tipflash .6s}
+@keyframes tipflash{0%{color:var(--red)}100%{color:var(--ink-soft)}}
+#game.g-maohou #palette,#game.g-kite #palette,#game.g-mask #palette{display:none}
+.game-body{padding:0 3vw}
+.ref-card{position:absolute;left:3vw;bottom:8px;width:150px;background:#fbf6ea;padding:6px;box-shadow:0 6px 18px rgba(60,40,20,.15);transform:rotate(-2deg);cursor:zoom-in;z-index:6;transition:width .4s,transform .4s}
+.ref-card img{width:100%;display:block}
+.ref-card figcaption{font-size:11px;line-height:1.5;margin-top:4px;color:var(--ink-soft)}
+.ref-card figcaption b{display:block;color:var(--ink);font-weight:600}
+.ref-card figcaption small{font-size:9px;opacity:.75}
+.ref-card.big{width:min(420px,60vw);transform:none;cursor:zoom-out}
+.mh-step{font-size:13px;letter-spacing:.3em;color:var(--red);margin-bottom:10px}
+.mh-step b{font-size:18px;color:var(--ink);margin-right:8px}
+.mh-label{font-size:12px;letter-spacing:.2em;color:var(--ink-soft);margin:14px 0 8px}
+
+/* 毛猴 */
+.mh3d{position:relative;width:min(1100px,94vw);height:100%;max-height:66vh;display:flex;gap:18px}
+.mh3d canvas{flex:1;min-width:0;height:100%;touch-action:none}
+.mh-side{width:250px;flex:none;align-self:center;background:rgba(251,246,234,.8);padding:18px 20px;border:1px solid rgba(47,43,38,.12)}
+.mh-list{list-style:none;font-size:14px;line-height:2.1}
+.mh-list li::before{content:'○ ';color:var(--red)}
+.mh-list li.done{color:var(--ink-soft);text-decoration:line-through}
+.mh-list li.done::before{content:'● '}
+.mh-note{font-size:12px;color:var(--ink-soft);margin-top:12px;line-height:1.7}
+.mh-sw{display:flex;gap:10px;flex-wrap:wrap;padding-bottom:16px}
+.mh-sw button{width:30px;height:30px;border-radius:50%;position:relative;border:2px solid transparent}
+.mh-sw button.on{border-color:var(--ink);transform:scale(1.12)}
+.mh-sw button span{position:absolute;top:100%;left:50%;transform:translateX(-50%);font-size:10px;white-space:nowrap;margin-top:3px;color:var(--ink-soft)}
+.mh-cap{font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer}
+.mh-props,.kt-types{display:flex;flex-wrap:wrap;gap:8px}
+.mh-props button,.kt-types button{border:1px solid rgba(47,43,38,.35);padding:6px 12px;font-size:13px;letter-spacing:.15em}
+.mh-props button.on,.kt-types button.on{background:var(--red);color:#fbefdc;border-color:var(--red)}
+.mh-line{font-size:13px;line-height:1.8;color:#5a4f42;margin-top:14px;font-style:italic}
+
+/* 沙燕 */
+.kite-wrap{position:relative;width:min(1150px,94vw);height:100%;max-height:68vh;display:flex;gap:20px}
+.kite-paint{flex:1;min-width:0;position:relative}
+.kite-paint canvas{position:absolute;inset:0;mix-blend-mode:normal;max-height:none;max-width:none;cursor:default}
+.kite-tray{width:300px;flex:none;align-self:center;background:rgba(251,246,234,.85);padding:16px 18px;border:1px solid rgba(47,43,38,.12)}
+.kt-note{font-size:12px;color:var(--ink-soft);margin-top:6px}
+.kt-motifs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kt-m{display:flex;align-items:center;gap:8px;padding:6px;border:1px dashed rgba(47,43,38,.25);cursor:grab;touch-action:none;user-select:none;background:#fffaf0}
+.kt-m:hover{border-color:var(--red)}
+.kt-m img{width:38px;height:38px;object-fit:contain;pointer-events:none}
+.kt-m span{font-size:13px;line-height:1.3}
+.kt-m small{display:block;font-size:10px;color:var(--ink-soft)}
+.kt-ghost{position:fixed;width:70px;height:70px;object-fit:contain;transform:translate(-50%,-50%);pointer-events:none;z-index:99;opacity:.85}
+.kt-combo{font-size:13px;margin:12px 0;color:#5a4f42}
+.kt-combo b{color:var(--red);font-size:18px;letter-spacing:.3em}
+#ktFly{width:100%}
+#ktFly:disabled{opacity:.35;pointer-events:none}
+.kite-wrap.flying{display:block;max-height:70vh}
+.fly-cv{position:absolute;inset:0;cursor:pointer;touch-action:none;max-height:none!important;max-width:none!important;mix-blend-mode:normal!important}
+.fly-hud{position:absolute;right:16px;top:16px;background:rgba(251,246,234,.88);padding:12px 16px;width:220px;font-size:12px;pointer-events:none}
+.fh-row{display:flex;align-items:center;gap:10px;margin:5px 0}
+.fh-row span{width:30px;letter-spacing:.1em}
+.fh-bar{flex:1;height:8px;background:rgba(47,43,38,.12);position:relative;overflow:hidden}
+.fh-bar b{position:absolute;left:0;top:0;bottom:0;background:#8a7a64;transition:width .1s}
+.fh-bar.warn b{background:#d79a3a}.fh-bar.warn.hot b{background:var(--red)}
+.fh-bar.ok b{background:#3f7d5c}
+.fh-tip{margin-top:8px;font-size:13px;color:var(--red);letter-spacing:.1em;min-height:1.4em}
+
+/* 脸谱 */
+.mask-wrap{position:relative;width:min(1150px,94vw);height:100%;max-height:68vh;display:flex;gap:20px}
+.mask-stage{flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;background:#2b2724;overflow:hidden}
+.mask-stage.paper{background:#efe4cb}
+.mask-cv{max-width:100%!important;max-height:100%!important;mix-blend-mode:normal!important;cursor:default!important}
+.mask-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.mask-flash.go{animation:mflash .7s}
+@keyframes mflash{0%{opacity:.85}100%{opacity:0}}
+.mask-gate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#efe6cf;text-align:center;font-size:14px;line-height:1.9;
+  background:radial-gradient(ellipse at 50% 40%,#4a2420,#1d1a17)}
+.mg-big{font-size:2.2rem;letter-spacing:.6em;color:#f2c46b;font-weight:600}
+.mg-btns{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.mask-gate .btn.ghost{color:#efe6cf;border-color:rgba(239,230,207,.5)}
+.mg-err{font-size:13px;color:#f2c46b;min-height:1.5em}
+.mask-side{width:320px;flex:none;align-self:center;background:rgba(251,246,234,.85);padding:16px 18px;border:1px solid rgba(47,43,38,.12)}
+.ms-clue{font-size:16px;line-height:1.9;border-left:3px solid var(--red);padding:6px 0 6px 14px;margin:6px 0 14px;color:#3a342c}
+.ms-clue small{font-size:12px;color:var(--red);letter-spacing:.3em}
+.ms-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ms-cards button{padding:4px;border:2px solid transparent;background:#fffaf0;transition:transform .2s}
+.ms-cards button:hover{transform:translateY(-3px)}
+.ms-cards button.on{border-color:var(--red)}
+.ms-cards button.wrong{animation:shake .45s}
+@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+.ms-cards img{width:100%;display:block}
+.ms-cards span{font-size:11px;color:var(--ink-soft)}
+.ms-why{font-size:13px;line-height:1.8;color:#5a4f42;margin:12px 0;min-height:3.6em}
+.ms-why b{color:var(--red)}
+.ms-act{display:flex;gap:8px;flex-wrap:wrap}
+.ms-act .btn{padding:8px 14px;font-size:13px;letter-spacing:.15em}
+@media (max-width:860px){
+  .mh3d,.kite-wrap,.mask-wrap{flex-direction:column;max-height:none}
+  .mh-side,.kite-tray,.mask-side{width:100%}
+  .ref-card{display:none}
+}
