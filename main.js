@@ -132,6 +132,29 @@ const maxScroll = () => document.documentElement.scrollHeight - innerHeight;
 addEventListener('scroll', () => { target = clamp(scrollY / maxScroll()) * (N - 1); $('#scrollHint').classList.add('hide'); }, { passive: true });
 addEventListener('mousemove', e => { mouseX = e.clientX / innerWidth - .5; mouseY = e.clientY / innerHeight - .5; });
 function goTo(i) { overview = false; scrollTo({ top: i / (N - 1) * maxScroll(), behavior: 'smooth' }); }
+/* 一滑一站：滚轮/触控板/滑动一次就飞到下一个时间点，不用使劲滚 */
+let snapLock = 0, wAcc = 0, wT = 0;
+const curStop = () => Math.round(clamp(scrollY / maxScroll()) * (N - 1));
+const blocked = e => !introAlive && (document.body.classList.contains('locked') || (e && e.target.closest && e.target.closest('#panel,#game,#menu,#finale')));
+function step(d) {
+  const now = performance.now(); if (now < snapLock) return;
+  const i = clamp(curStop() + d, 0, N - 1); if (i === curStop()) return;
+  snapLock = now + 1000; goTo(i);
+}
+addEventListener('wheel', e => {
+  if (introAlive || blocked(e)) return;
+  e.preventDefault();
+  const now = performance.now(); if (now - wT > 250) wAcc = 0; wT = now;
+  wAcc += e.deltaY;
+  if (Math.abs(wAcc) > 25) { step(Math.sign(wAcc)); wAcc = 0; }
+}, { passive: false });
+let sy0 = null;
+addEventListener('touchstart', e => { sy0 = e.touches[0].clientY; }, { passive: true });
+addEventListener('touchmove', e => { if (!introAlive && !blocked(e)) e.preventDefault(); }, { passive: false });
+addEventListener('touchend', e => { if (sy0 === null || introAlive || blocked(e)) return; const d = sy0 - e.changedTouches[0].clientY; if (Math.abs(d) > 30) step(Math.sign(d)); sy0 = null; });
+addEventListener('keydown', e => { if (introAlive || blocked()) return;
+  if (['ArrowDown', 'PageDown', ' ', 'ArrowRight'].includes(e.key)) { e.preventDefault(); step(1); }
+  if (['ArrowUp', 'PageUp', 'ArrowLeft'].includes(e.key)) { e.preventDefault(); step(-1); } });
 addEventListener('keydown', e => {
   if (document.body.classList.contains('locked')) return;
   const cur = Math.round(prog);
@@ -327,36 +350,45 @@ $('#menuClose').onclick = () => $('#menu').classList.remove('open');
 document.body.classList.add('locked');
 scrollTo(0, 0);
 const intro = $('#intro');
-let introTarget = 0, entering = false, imx = 0, imy = 0;
+let entering = false, enterT0 = 0, imx = 0, imy = 0, peekP = 0;
+const ENTER_MS = 1600;
 intro.addEventListener('mousemove', e => { imx = e.clientX / innerWidth - .5; imy = e.clientY / innerHeight - .5; });
-function introLoop() {
+function finishIntro() {
   if (!intro.isConnected) return;
-  introP += (introTarget - introP) * (entering ? .045 : .12);
+  introP = 1; introAlive = false; $('#gl').style.filter = ''; snapLock = performance.now() + 900;
+  document.body.classList.remove('locked'); intro.remove();
+}
+function introLoop(now) {
+  if (!intro.isConnected) return;
+  // 进入动画按真实时间推进（与帧率无关，电脑卡也不会卡在首页）
+  if (entering) { const t = clamp((performance.now() - enterT0) / ENTER_MS); introP = Math.max(peekP, .06 + t * .94 * (2 - t)); }
+  else introP += (peekP - introP) * .15;
   const cur = intro.style;
   const ox = parseFloat(cur.getPropertyValue('--mx')) || 0, oy = parseFloat(cur.getPropertyValue('--my')) || 0;
   cur.setProperty('--mx', (ox + (imx - ox) * .06).toFixed(4));
   cur.setProperty('--my', (oy + (imy - oy) * .06).toFixed(4));
   cur.setProperty('--p', introP.toFixed(4));
-  // 2D 胡同口与 3D 胡同同视角交叉溶解
-  const f = smooth(clamp((introP - .28) / .5));
+  // 2D 胡同口与 3D 胡同同视角交叉溶解（由晨雾遮罩过渡，不再用耗性能的模糊滤镜）
+  const f = smooth(clamp((introP - .25) / .55));
   cur.opacity = (1 - f).toFixed(3);
-  // 叠化最重时两边都轻微虚化，像眨眼、像走进雾里
-  const bl = Math.sin(f * Math.PI);
-  cur.filter = bl > .01 ? `blur(${(bl * 5).toFixed(2)}px)` : '';
-  $('#gl').style.filter = bl > .01 ? `blur(${(bl * 3).toFixed(2)}px)` : '';
-  if (entering && introP > .55 && document.body.classList.contains('locked')) document.body.classList.remove('locked');
-  if (entering && introP > .985) { introP = 1; introAlive = false; $('#gl').style.filter = ''; intro.remove(); return; }
+  if (entering && introP >= .999) return finishIntro();
   requestAnimationFrame(introLoop);
 }
-function enter() { if (entering) return; entering = true; introTarget = 1; }
-// 轻滚先“探头”，继续滚就进入
-let peek = 0;
-intro.addEventListener('wheel', e => { e.preventDefault(); peek = clamp(peek + e.deltaY / 900, 0, .3); introTarget = peek; if (peek >= .3) enter(); }, { passive: false });
+function enter() {
+  if (entering || !intro.isConnected) return;
+  entering = true; enterT0 = performance.now();
+  intro.style.pointerEvents = 'none';           // 立刻放行，不再挡住页面
+  document.body.classList.remove('locked');
+  setTimeout(finishIntro, ENTER_MS + 600);      // 兜底：无论如何 2 秒后进入
+}
+// 轻轻一滑 / 一点 / 任意键就进入
+intro.addEventListener('wheel', e => { e.preventDefault(); if (Math.abs(e.deltaY) + Math.abs(e.deltaX) > 2) { peekP = .12; enter(); } }, { passive: false });
 let ty0 = null;
 intro.addEventListener('touchstart', e => { ty0 = e.touches[0].clientY; }, { passive: true });
-intro.addEventListener('touchmove', e => { if (ty0 !== null && ty0 - e.touches[0].clientY > 40) enter(); }, { passive: true });
+intro.addEventListener('touchmove', e => { if (ty0 !== null && Math.abs(ty0 - e.touches[0].clientY) > 12) enter(); }, { passive: true });
+intro.addEventListener('pointerdown', enter);
 intro.addEventListener('click', enter);
-addEventListener('keydown', e => { if (intro.isConnected && !entering && [' ', 'Enter', 'ArrowDown'].includes(e.key)) enter(); });
+addEventListener('keydown', e => { if (intro.isConnected && !entering) enter(); });
 // 首页鸽群
 (function introBirds() {
   if (!intro.isConnected) return;
